@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RIFKI | Creative Developer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables */
+        :root {
+            --bg: #050505;
+            --text: #ffffff;
+            --accent: #ccff00;
+            --accent-secondary: #ff00c8;
+            --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E");
+        }
+
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none !important;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.2;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: var(--grain);
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.4;
+        } */
+
+        /* Custom Cursor */
+        /* --- UPDATE BAGIAN INI --- */
+        .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            
+            /* UBAH Z-INDEX JADI LEBIH TINGGI DARI 10000 */
+            z-index: 99999; /* Sebelumnya 9999 */
+            
+            mix-blend-mode: difference;
+            transition: transform 0.2s ease;
+        }
+
+        .cursor-follower {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            
+            /* UBAH Z-INDEX JADI LEBIH TINGGI DARI 10000 TAPI DI BAWAH CURSOR UTAMA */
+            z-index: 99998; /* Sebelumnya 9998 */
+            
+            mix-blend-mode: difference;
+            transition: transform 0.6s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .cursor.hover, .cursor-follower.hover {
+            transform: scale(1.5);
+            opacity: 1;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        section {
+            padding: 8rem 0;
+            position: relative;
+        }
+
+        /* Floating Menu */
+        .floating-menu {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* TOMBOL MENU BULAT (Updated) */
+        .menu-btn {
+            width: 95px;
+            height: 95px;
+            border-radius: 50%;
+            
+            padding: 0;
+            border: 2px solid var(--text);
+            
+            /* --- PERUBAHAN UTAMA DI SINI --- */
+            /* Ganti background solid dengan semi-transparan */
+            background: rgba(5, 5, 5, 0.2); 
+            
+            /* Efek Kaca Buram (Blur) - Membuatnya terlihat mewah */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* Untuk Safari */
+            /* ------------------------------- */
+
+            color: var(--text);
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Efek Hover: Saat disentuh jadi Solid agar kontras */
+        .menu-btn:hover {
+            background: var(--text); /* Jadi solid putih/terang saat di-hover */
+            color: var(--bg);
+            transform: scale(1.1);
+            border-color: var(--text);
+        }
+
+        /* --- RESPONSIF UNTUK HP (PENTING) --- */
+        /* Agar lingkaran tidak kegedean di layar HP */
+        @media (max-width: 768px) {
+            .menu-btn {
+                width: 70px;   /* Lebih kecil di HP */
+                height: 70px;
+                font-size: 0.65rem; /* Font mengecil menyesuaikan lingkaran */
+                letter-spacing: 0.5px;
+                border-width: 1px;
+            }
+            
+            .floating-menu {
+                gap: 0.5rem; /* Jarak antar tombol dirapatkan sedikit */
+                bottom: 1.5rem;
+                right: 1.5rem;
+            }
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* --- KODE BARU (YANG SUDAH DIPERKECIL) --- */
+        .hero-text h1 {
+            /* Mengurangi ukuran "HI, I'M" agar proporsional */
+            font-size: clamp(1.5rem, 4vw, 4rem); 
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-text .name {
+            /* Mengurangi ukuran NAMA agar pas di kolom kiri */
+            /* clamp(min, ideal, max) -> Max dikurangi dari 12rem ke 6.5rem */
+            font-size: clamp(2.5rem, 7vw, 6.5rem); 
+            color: var(--accent);
+            display: block;
+            margin-top: -0.5rem; /* Mengurangi jarak antar baris nama */
+            line-height: 0.9;    /* Membuat nama lebih rapat vertikal */
+        }
+
+        .hero-text p {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            max-width: 500px;
+        }
+
+        .hero-image {
+            position: relative;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-frame {
+            width: 400px;
+            height: 500px;
+            border: 3px solid var(--text);
+            position: relative;
+            transform: rotate(5deg);
+            transition: transform 0.5s ease;
+        }
+
+        .photo-frame:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--accent), var(--accent-secondary));
+            mix-blend-mode: difference;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--bg);
+            font-weight: 700;
+        }
+
+        /* Infinite Marquee */
+        .marquee {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            padding: 1.5rem 0;
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .marquee-content {
+            display: flex;
+            animation: marquee 20s linear infinite;
+            white-space: nowrap;
+        }
+
+        .marquee-item {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 2rem;
+            text-transform: uppercase;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* About Section */
+        .about {
+            padding: 10rem 0;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        .about-text h2 {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        .about-text p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .skill-item {
+            padding: 1rem;
+            border: 2px solid var(--text);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .skill-item:hover {
+            background: var(--text);
+            color: var(--bg);
+            transform: translateY(-5px);
+        }
+
+        /* Projects Section */
+        .projects {
+            padding: 8rem 0;
+        }
+
+        .projects h2 {
+            font-size: 4rem;
+            margin-bottom: 3rem;
+            color: var(--accent);
+        }
+
+        .project-list {
+            list-style: none;
+        }
+
+        .project-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 0;
+            position: relative;
+        }
+
+        .project-link {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: block;
+            position: relative;
+            z-index: 2;
+        }
+
+        .project-link:hover {
+            color: var(--accent);
+            padding-left: 2rem;
+        }
+
+        .project-preview {
+            position: fixed;
+            width: 400px;
+            height: 250px;
+            background: var(--accent);
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 10;
+            border: 2px solid var(--text);
+            overflow: hidden;
+        }
+
+        .project-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 8rem 0;
+        }
+
+        .contact h2 {
+            font-size: 4rem;
+            margin-bottom: 3rem;
+            color: var(--accent);
+        }
+
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .contact-text {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .contact-link {
+            font-size: 1.5rem;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 0.5rem;
+            width: fit-content;
+        }
+
+        .contact-link:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- MODAL STYLES (NEO-BRUTALIST) --- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* Latar belakang redup */
+            backdrop-filter: blur(8px); /* Efek blur di belakang modal */
+            z-index: 10000; /* Paling atas */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--bg);
+            border: 2px solid var(--accent); /* Border warna hijau neon/aksen */
+            padding: 3rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            transform: translateY(50px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efek memantul */
+            box-shadow: 0 0 50px rgba(204, 255, 0, 0.1);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .modal-message {
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-modal {
+            padding: 1rem 2rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            text-decoration: none;
+            border: 2px solid var(--text);
+            cursor: none; /* Mengikuti kustom kursor */
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        /* Tombol GitHub (Primary) */
+        .btn-modal.primary {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+
+        .btn-modal.primary:hover {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
+        /* Tombol Close (Secondary) */
+        .btn-modal.secondary {
+            background: transparent;
+            color: var(--text);
+        }
+
+        .btn-modal.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsif untuk HP */
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 2rem;
+            }
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero-content, .about-content, .contact-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .hero-image {
+                height: 50vh;
+            }
+            
+            .photo-frame {
+                width: 300px;
+                height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1.5rem;
+            }
+            
+            section {
+                padding: 5rem 0;
+            }
+            
+            .hero-text h1 {
+                font-size: 3rem;
+            }
+            
+            .hero-text .name {
+                font-size: 4rem;
+            }
+            
+            .project-link {
+                font-size: 2rem;
+            }
+            
+            .floating-menu {
+                bottom: 1rem;
+                right: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .photo-frame {
+                width: 250px;
+                height: 320px;
+            }
+            
+            .project-preview {
+                width: 300px;
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Floating Menu -->
+    <div class="floating-menu">
+        <a href="#work" class="menu-btn">Work</a>
+        <a href="#about" class="menu-btn">About</a>
+        <a href="#contact" class="menu-btn">Contact</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>
+                        HI, I'M<br>
+                        <span class="name">RIFKI</span>
+                        <span class="name">HAFIDL</span>
+                        ALAUDDIN
+                    </h1>
+                    <p>Software Developer & MLOps Enthusiast. Build high-performance applications for both <strong>Web</strong> and <strong>Mobile</strong> environments.</p>
+                </div>
+                <div class="hero-image">
+                    <div class="photo-frame">
+                        <img src="rifki.jpg" alt="Rifki Hafidl" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Infinite Marquee -->
+    <div class="marquee">
+        <div class="marquee-content">
+            <div class="marquee-item">MOBILE APPS</div>
+            <div class="marquee-item">WEB DEVELOPMENT</div>
+            <div class="marquee-item">FLUTTER EXPERT</div>
+            <div class="marquee-item">ANDROID & IOS</div>
+            <div class="marquee-item">FULLSTACK PHP</div>
+            <div class="marquee-item">MOBILE APPS</div>
+            <div class="marquee-item">WEB DEVELOPMENT</div>
+            <div class="marquee-item">FLUTTER EXPERT</div>
+            <div class="marquee-item">ANDROID & IOS</div>
+            <div class="marquee-item">FULLSTACK PHP</div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>ABOUT</h2>
+                    <p>I am a Cross-Platform Software Developer based in Indonesia, bridging the gap between robust backends and fluid mobile experiences. As a dedicated Informatics Engineering graduate (D3), I don't just write code; I engineer complete digital ecosystems that solve real-world problems with precision and efficiency.</p>
+                    <p>My journey is defined by hands-on versatility, ranging from handling corporate data during my internship at PT Telkom Akses to delivering custom freelance solutions. I specialize in crafting high-performance web applications using PHP and seamless, native-feel mobile apps with Flutter, ensuring consistency across all user touchpoints.</p>
+                    <p>Currently, I am pushing the boundaries of traditional development by diving deep into Artificial Intelligence. Through the MLOps Engineering path, I am focused on integrating intelligent models into production environments, aiming to build the next generation of smart, data-driven software solutions.</p>
+                </div>
+                <div class="skills-grid">
+                    <div class="skill-item">PHP / Laravel</div>
+                    <div class="skill-item">Flutter / Dart</div>
+                    <div class="skill-item">Web Development</div>
+                    <div class="skill-item">MySQL Database</div>
+                    <div class="skill-item">Python Basics</div>
+                    <div class="skill-item">Machine Learning</div>
+                    <div class="skill-item">Git / GitHub</div>
+                    <div class="skill-item">System Analysis</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Infinite Marquee -->
+    <div class="marquee">
+        <div class="marquee-content">
+            <div class="marquee-item">HIGH PERFORMANCE</div>
+            <div class="marquee-item">CLEAN CODE</div>
+            <div class="marquee-item">SCALABLE SOLUTIONS</div>
+            <div class="marquee-item">USER CENTRIC</div>
+            <div class="marquee-item">RESPONSIVE DESIGN</div>
+            <div class="marquee-item">HIGH PERFORMANCE</div>
+            <div class="marquee-item">CLEAN CODE</div>
+            <div class="marquee-item">SCALABLE SOLUTIONS</div>
+            <div class="marquee-item">USER CENTRIC</div>
+            <div class="marquee-item">RESPONSIVE DESIGN</div>
+        </div>
+    </div>
+
+    <!-- Projects Section -->
+    <section class="projects" id="work">
+        <div class="container">
+            <h2>WORK</h2>
+            <ul class="project-list">
+                <li class="project-item">
+                    <a href="#" class="project-link" data-preview="project1">TELECOM OPS DASHBOARD</a>
+                </li>
+
+                <li class="project-item">
+                    <a href="#" class="project-link" data-preview="project2">GOV WORKFORCE DATA SYSTEM</a>
+                </li>
+
+                <li class="project-item">
+                    <a href="#" class="project-link" data-preview="project3">PUBLIC SERVICE PLATFORM</a>
+                </li>
+
+                <li class="project-item">
+                    <a href="#" class="project-link" data-preview="project4">INTERACTIVE LEARNING APP</a>
+                </li>
+
+                <li class="project-item">
+                    <a href="#" class="project-link" data-preview="project5">ISLAMIC SCHOOL ADMIN</a>
+                </li>
+
+                <li class="project-item">
+                    <a href="#" class="project-link" data-preview="project6">ACADEMIC MOBILE SYSTEM</a>
+                </li>
+            </ul>
+        </div>
+        <div class="project-preview"></div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2>CONTACT</h2>
+            <div class="contact-content">
+                <div>
+                    <p class="contact-text">Ready to create something extraordinary? Let's connect and discuss your next project.</p>
+                    <div class="contact-links">
+                        <a href="mailto:idulfirei@gmail.com" class="contact-link">idulfirei@gmail.com</a>
+                        <a href="https://github.com/haapiid" class="contact-link">Github</a>
+                        <a href="https://www.linkedin.com/in/rifki-hafidl-alauddin-017220330" class="contact-link">LinkedIn</a>
+                        <a href="https://www.instagram.com/haapiid" class="contact-link">Instagram</a>
+                    </div>
+                </div>
+                <div>
+                    <p class="contact-text">Currently available for select freelance projects and collaborations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© 2025 RIFKI HAFIDL ALAUDDIN. ALL RIGHTS RESERVED.</p>
+        </div>
+    </footer>
+
+    <div id="project-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">WORK IN PROGRESS 🚧</h3>
+            <p class="modal-message">
+                Hi there! The detailed brand guideline/case study for this project is currently being polished in my design lab.
+                <br><br>
+                In the meantime, you can explore the source code and technical details on my GitHub.
+            </p>
+            <div class="modal-buttons">
+                <a href="https://github.com/haapiid" target="_blank" class="btn-modal primary">VISIT GITHUB</a>
+                <button class="btn-modal secondary" onclick="closeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- 1. CUSTOM CURSOR LOGIC ---
+    const cursor = document.querySelector('.cursor');
+    const cursorFollower = document.querySelector('.cursor-follower');
+
+    document.addEventListener('mousemove', (e) => {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+        
+        // Sedikit delay untuk follower agar terlihat smooth
+        setTimeout(() => {
+            cursorFollower.style.left = e.clientX + 'px';
+            cursorFollower.style.top = e.clientY + 'px';
+        }, 100);
+    });
+
+    // Efek saat hover elemen yang bisa diklik
+    const hoverElements = document.querySelectorAll('a, button, .skill-item, .project-link, .menu-btn');
+    
+    hoverElements.forEach(element => {
+        element.addEventListener('mouseenter', () => {
+            cursor.classList.add('hover');
+            cursorFollower.classList.add('hover');
+        });
+        
+        element.addEventListener('mouseleave', () => {
+            cursor.classList.remove('hover');
+            cursorFollower.classList.remove('hover');
+        });
+    });
+
+    // Sembunyikan kursor jika mouse diam lama (opsional)
+    let cursorTimer;
+    document.addEventListener('mousemove', () => {
+        cursor.style.opacity = '1';
+        cursorFollower.style.opacity = '1';
+        clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(() => {
+            cursor.style.opacity = '0';
+            cursorFollower.style.opacity = '0';
+        }, 3000);
+    });
+
+
+    // --- 2. MODAL & PROJECT LOGIC ---
+    const modal = document.getElementById('project-modal');
+    const projectLinks = document.querySelectorAll('.project-link');
+    const projectPreview = document.querySelector('.project-preview');
+
+    // Data Gambar/Preview Proyek
+    const projectImages = {
+        project1: '<div style="width:100%;height:100%;background:linear-gradient(45deg, #ff0000, #ffffff);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;text-align:center;padding:20px;"><span style="font-weight:800;font-size:2rem;">PT TELKOM AKSES</span><span style="font-size:1rem;margin-top:10px;">Operational Team Monitoring System<br>(Web Dashboard)</span></div>',
+        project2: '<div style="width:100%;height:100%;background:linear-gradient(45deg, #00ccff, #0055ff);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px;"><span style="font-weight:800;font-size:2rem;">DISNAKER SYSTEM</span><span style="font-size:1rem;margin-top:10px;">Foreign & Immigrant Worker Data<br>(Government System)</span></div>',
+        project3: '<div style="width:100%;height:100%;background:linear-gradient(45deg, #ccff00, #00cc00);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;text-align:center;padding:20px;"><span style="font-weight:800;font-size:2rem;">PUBLIC SERVICES</span><span style="font-size:1rem;margin-top:10px;">QA Internal Polytechnic &<br>Village Complaint System</span></div>',
+        project4: '<div style="width:100%;height:100%;background:linear-gradient(45deg, #ff00c8, #6600ff);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px;"><span style="font-weight:800;font-size:2rem;">FLUTTER APP</span><span style="font-size:1rem;margin-top:10px;">Interactive Learning Media<br>(Mobile Application)</span></div>',
+        project5: '<div style="width:100%;height:100%;background:linear-gradient(45deg, #ffffff, #ffaa00);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;text-align:center;padding:20px;"><span style="font-weight:800;font-size:2rem;">DARUL MU\'MIN</span><span style="font-size:1rem;margin-top:10px;">School Administration &<br>Information System</span></div>',
+        project6: '<div style="width:100%;height:100%;background:linear-gradient(45deg, #000000, #ccff00);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px;"><span style="font-weight:800;font-size:2rem;">ACADEMIC & RESERVATION</span><span style="font-size:1rem;margin-top:10px;">Integrated Mobile Systems<br>(Cross-Platform)</span></div>'
+    };
+
+    // Fungsi Buka Modal
+    function openModal(e) {
+        e.preventDefault(); // Mencegah link pindah halaman
+        modal.classList.add('active');
+    }
+
+    // Fungsi Tutup Modal (Dipanggil oleh tombol Close di HTML)
+    function closeModal() {
+        modal.classList.remove('active');
+    }
+
+    // Event Listener untuk setiap Link Project
+    projectLinks.forEach(link => {
+        // 1. Saat KLIK -> Buka Modal
+        link.addEventListener('click', openModal);
+
+        // 2. Saat HOVER -> Tampilkan Preview Gambar
+        link.addEventListener('mouseenter', (e) => {
+            const previewId = link.getAttribute('data-preview');
+            // Ambil data gambar, jika tidak ada pakai default project1
+            projectPreview.innerHTML = projectImages[previewId] || projectImages['project1'];
+            
+            projectPreview.style.opacity = '1';
+            projectPreview.style.transform = `translate(${e.clientX}px, ${e.clientY}px) scale(1)`;
+            
+            // Efek kursor membesar
+            cursor.classList.add('hover');
+            cursorFollower.classList.add('hover');
+        });
+        
+        // 3. Saat MOUSE BERGERAK -> Gambar mengikuti mouse
+        link.addEventListener('mousemove', (e) => {
+            // Offset 20px agar tidak menutupi kursor pas
+            projectPreview.style.transform = `translate(${e.clientX + 20}px, ${e.clientY + 20}px) scale(1)`;
+        });
+        
+        // 4. Saat MOUSE KELUAR -> Sembunyikan gambar
+        link.addEventListener('mouseleave', () => {
+            projectPreview.style.opacity = '0';
+            projectPreview.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            
+            // Reset kursor
+            cursor.classList.remove('hover');
+            cursorFollower.classList.remove('hover');
+        });
+    });
+
+    // Tutup modal jika user klik area gelap di luar kotak (Overlay)
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+
+    // --- 3. PARALLAX SCROLL EFFECT ---
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const parallaxElements = document.querySelectorAll('.hero-text, .hero-image, .about-text');
+        
+        parallaxElements.forEach((el) => {
+            const speed = 0.3; // Kecepatan parallax
+            const yPos = -(scrolled * speed);
+            el.style.transform = `translateY(${yPos}px)`;
+        });
+    });
+</script>
+</body>
+</html>
